@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mobile_computing_project/shopping/view_shopping_list.dart';
 
 void main() {
   runApp(const MyApp());
@@ -9,11 +10,11 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const title = 'TODO List App';
+    const title = 'Shopping Companion';
 
     return const MaterialApp(
       title: title,
-      // home: ,
+      home: ViewShoppingList(),
     );
   }
 }
