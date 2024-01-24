@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:google_places_flutter/google_places_flutter.dart';
 import 'package:google_places_flutter/model/prediction.dart';
 
+import '../map/map_view.dart';
+
 class AddShoppingBasket extends StatefulWidget{
   @override
   _AddShoppingBasketState createState()=>_AddShoppingBasketState();
@@ -12,8 +14,8 @@ class _AddShoppingBasketState extends State<AddShoppingBasket>{
   final TextEditingController _textTitleFieldController = TextEditingController();
   final TextEditingController _textDescriptionFieldController = TextEditingController();
   TextEditingController textPlaceFieldController = TextEditingController();
-  late double lng;
-  late double lat;
+  double? lng;
+  double? lat;
 
   // File? _image;
   // final imagePicker = ImagePicker();
@@ -50,6 +52,12 @@ class _AddShoppingBasketState extends State<AddShoppingBasket>{
               ),
               SizedBox(height: 20),
               placesAutoCompleteTextField(),
+              lng!=null? TextButton(
+                onPressed: () {
+                  _goToMap(context);
+                },
+                child: const Text('Go to the map'),
+              ) : Column(),
               TextButton(
                 onPressed: () {
                   _addShoppingBasket(context);
@@ -61,6 +69,14 @@ class _AddShoppingBasketState extends State<AddShoppingBasket>{
         ),
       ),
     );
+  }
+
+  void _goToMap(BuildContext context) async{
+    final result = await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => MapView(lat:lat ?? 0.0, lng: lng ?? 0.0, description: _textDescriptionFieldController.text),
+        ));
   }
 
   // Future<String> saveImageToFileSystem(File imageFile) async {
@@ -99,15 +115,17 @@ class _AddShoppingBasketState extends State<AddShoppingBasket>{
         ),
         debounceTime: 400,
         countries: ["fi"],
-        isLatLngRequired: false,
+        isLatLngRequired: true,
         getPlaceDetailWithLatLng: (Prediction prediction) {
           print("placeDetails" + prediction.lat.toString());
+          setState(() {
+            lng = double.parse(prediction.lng.toString());
+            lat = double.parse(prediction.lat.toString());
+          });
         },
 
         itemClick: (Prediction prediction) {
           textPlaceFieldController.text = prediction.description ?? "";
-          lng = double.parse(prediction.lng!);
-          lat = double.parse(prediction.lat!);
           textPlaceFieldController.selection = TextSelection.fromPosition(
               TextPosition(offset: prediction.description?.length ?? 0));
         },
