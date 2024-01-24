@@ -52,7 +52,7 @@ class _MapViewState extends State<MapView> {
 
     String _startLocation = "${_currentPosition?.latitude},${_currentPosition?.longitude}";
     String _endLocation = "${widget.lat},${widget.lng}";
-    _url = 'https://maps.googleapis.com/maps/api/directions/json?origin=$_startLocation&destination=$_endLocation&mode=walking&key=$apiKey';
+    _url = 'https://maps.googleapis.com/maps/api/directions/json?origin=$_startLocation&destination=$_endLocation&key=$apiKey';
 
     return fetchRouteCoordinates();
   }
