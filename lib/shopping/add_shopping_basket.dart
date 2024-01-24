@@ -8,6 +8,7 @@ class AddShoppingBasket extends StatefulWidget{
 }
 
 class _AddShoppingBasketState extends State<AddShoppingBasket>{
+  String apiKey = "";
   final TextEditingController _textTitleFieldController = TextEditingController();
   final TextEditingController _textDescriptionFieldController = TextEditingController();
   TextEditingController textPlaceFieldController = TextEditingController();
@@ -90,7 +91,7 @@ class _AddShoppingBasketState extends State<AddShoppingBasket>{
       padding: const EdgeInsets.symmetric(horizontal: 0),
       child: GooglePlaceAutoCompleteTextField(
         textEditingController: textPlaceFieldController,
-        googleAPIKey:"AIzaSyASUEvfB48BeoYiKNS4BISIa52VRiRzBVc",
+        googleAPIKey:apiKey,
         inputDecoration: const InputDecoration(
           hintText: "Search your location",
           border: InputBorder.none,
