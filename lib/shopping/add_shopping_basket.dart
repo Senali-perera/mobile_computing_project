@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:google_places_flutter/google_places_flutter.dart';
+import 'package:google_places_flutter/model/prediction.dart';
 
 class AddShoppingBasket extends StatefulWidget{
   @override
@@ -8,6 +10,10 @@ class AddShoppingBasket extends StatefulWidget{
 class _AddShoppingBasketState extends State<AddShoppingBasket>{
   final TextEditingController _textTitleFieldController = TextEditingController();
   final TextEditingController _textDescriptionFieldController = TextEditingController();
+  TextEditingController textPlaceFieldController = TextEditingController();
+  late double lng;
+  late double lat;
+
   // File? _image;
   // final imagePicker = ImagePicker();
   //
@@ -41,12 +47,14 @@ class _AddShoppingBasketState extends State<AddShoppingBasket>{
                 decoration:
                 const InputDecoration(hintText: 'Enter todo description here'),
               ),
+              SizedBox(height: 20),
+              placesAutoCompleteTextField(),
               TextButton(
                 onPressed: () {
                   _addShoppingBasket(context);
                 },
                 child: const Text('Add'),
-              )
+              ),
             ],
           ),
         ),
@@ -77,4 +85,54 @@ class _AddShoppingBasketState extends State<AddShoppingBasket>{
 
   }
 
+  placesAutoCompleteTextField() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 0),
+      child: GooglePlaceAutoCompleteTextField(
+        textEditingController: textPlaceFieldController,
+        googleAPIKey:"AIzaSyASUEvfB48BeoYiKNS4BISIa52VRiRzBVc",
+        inputDecoration: const InputDecoration(
+          hintText: "Search your location",
+          border: InputBorder.none,
+          enabledBorder: InputBorder.none,
+        ),
+        debounceTime: 400,
+        countries: ["fi"],
+        isLatLngRequired: false,
+        getPlaceDetailWithLatLng: (Prediction prediction) {
+          print("placeDetails" + prediction.lat.toString());
+        },
+
+        itemClick: (Prediction prediction) {
+          textPlaceFieldController.text = prediction.description ?? "";
+          lng = double.parse(prediction.lng!);
+          lat = double.parse(prediction.lat!);
+          textPlaceFieldController.selection = TextSelection.fromPosition(
+              TextPosition(offset: prediction.description?.length ?? 0));
+        },
+        seperatedBuilder: const Divider(),
+        containerHorizontalPadding: 10,
+
+        // OPTIONAL// If you want to customize list view item builder
+        itemBuilder: (context, index, Prediction prediction) {
+          return Container(
+            padding: EdgeInsets.all(10),
+            child: Row(
+              children: [
+                Icon(Icons.location_on),
+                const SizedBox(
+                  width: 7,
+                ),
+                Expanded(child: Text("${prediction.description??""}"))
+              ],
+            ),
+          );
+        },
+
+        isCrossBtnShown: true,
+
+        // default 600 ms ,
+      ),
+    );
+  }
 }
