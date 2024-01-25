@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:mobile_computing_project/shopping/view_shopping_list.dart';
+import 'package:permission_handler/permission_handler.dart';
 
-void main() {
+void main()  {
   runApp(const MyApp());
 }
 
@@ -12,6 +13,7 @@ class MyApp extends StatelessWidget {
   Future<void> requestPermission() async {
     LocationPermission permission;
     permission = await Geolocator.requestPermission();
+    Permission.camera.request();
   }
 
   @override

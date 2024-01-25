@@ -1,34 +1,49 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:google_places_flutter/google_places_flutter.dart';
 import 'package:google_places_flutter/model/prediction.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../map/map_view.dart';
 
-class AddShoppingBasket extends StatefulWidget{
+class AddShoppingBasket extends StatefulWidget {
   @override
-  _AddShoppingBasketState createState()=>_AddShoppingBasketState();
+  _AddShoppingBasketState createState() => _AddShoppingBasketState();
 }
 
-class _AddShoppingBasketState extends State<AddShoppingBasket>{
-  String apiKey = "";
-  final TextEditingController _textTitleFieldController = TextEditingController();
-  final TextEditingController _textDescriptionFieldController = TextEditingController();
+class _AddShoppingBasketState extends State<AddShoppingBasket> {
+  String apiKey = "AIzaSyASUEvfB48BeoYiKNS4BISIa52VRiRzBVc";
+  final TextEditingController _textTitleFieldController =
+      TextEditingController();
+  final TextEditingController _textDescriptionFieldController =
+      TextEditingController();
   TextEditingController textPlaceFieldController = TextEditingController();
   double? lng;
   double? lat;
 
-  // File? _image;
-  // final imagePicker = ImagePicker();
-  //
-  // void getImageFromGallery() async {
-  //   final pickedFile = await imagePicker.pickImage(source: ImageSource.gallery);
-  //
-  //   setState(() {
-  //     if (pickedFile != null) {
-  //       _image = File(pickedFile.path);
-  //     }
-  //   });
-  // }
+  File? _image;
+  final imagePicker = ImagePicker();
+
+  void getImageFromGallery() async {
+    final pickedFile = await imagePicker.pickImage(source: ImageSource.camera);
+
+    setState(() {
+      if (pickedFile != null) {
+        _image = File(pickedFile.path);
+      }
+    });
+  }
+
+  final ButtonStyle raisedButtonStyle = ElevatedButton.styleFrom(
+    foregroundColor: Colors.black87,
+    backgroundColor: Colors.purple[300],
+    minimumSize: Size(400, 36),
+    padding: EdgeInsets.symmetric(horizontal: 16),
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.all(Radius.circular(20)),
+    ),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -36,33 +51,67 @@ class _AddShoppingBasketState extends State<AddShoppingBasket>{
       appBar: AppBar(
         title: const Text('Add Shopping Basket'),
       ),
-      body: SingleChildScrollView(
+      body: Container(
         child: Padding(
           padding: EdgeInsets.all(16.0),
           child: Column(
             children: [
               TextField(
                 controller: _textTitleFieldController,
-                decoration: const InputDecoration(hintText: 'Shopping basket title'),
+                decoration:
+                    const InputDecoration(hintText: 'Shopping basket title'),
               ),
               TextField(
                 controller: _textDescriptionFieldController,
-                decoration:
-                const InputDecoration(hintText: 'Enter todo description here'),
+                decoration: const InputDecoration(
+                    hintText: 'Enter todo description here'),
               ),
               SizedBox(height: 20),
               placesAutoCompleteTextField(),
-              lng!=null? TextButton(
+              lng != null
+                  ? TextButton(
+                      onPressed: () {
+                        _goToMap(context);
+                      },
+                      child: const Text('Go to the map'),
+                    )
+                  : const Column(),
+              SizedBox(height: 20),
+              OutlinedButton(
                 onPressed: () {
-                  _goToMap(context);
+                  getImageFromGallery();
                 },
-                child: const Text('Go to the map'),
-              ) : Column(),
-              TextButton(
-                onPressed: () {
-                  _addShoppingBasket(context);
-                },
-                child: const Text('Add'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.blue,
+                  side: const BorderSide(color: Colors.blue, width: 2),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                ),
+                child: const Text(
+                  "Add Picture",
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue,
+                  ),
+                ),
+              ),
+              SizedBox(
+                  width: 100.0,
+                  height: 100.0,
+                  child: _image != null ? Image.file(_image!) : const Column()),
+              const Expanded(
+                child: SizedBox(),
+              ),
+              Align(
+                alignment: Alignment.bottomCenter,
+                child: ElevatedButton(
+                  style: raisedButtonStyle,
+                  onPressed: () {
+                    _addShoppingBasket(context);
+                  },
+                  child: Text('Add'),
+                ),
               ),
             ],
           ),
@@ -71,11 +120,14 @@ class _AddShoppingBasketState extends State<AddShoppingBasket>{
     );
   }
 
-  void _goToMap(BuildContext context) async{
+  void _goToMap(BuildContext context) async {
     final result = await Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => MapView(lat:lat ?? 0.0, lng: lng ?? 0.0, description: _textDescriptionFieldController.text),
+          builder: (context) => MapView(
+              lat: lat ?? 0.0,
+              lng: lng ?? 0.0,
+              description: _textDescriptionFieldController.text),
         ));
   }
 
@@ -99,7 +151,6 @@ class _AddShoppingBasketState extends State<AddShoppingBasket>{
     // Todo todo = Todo(id, title, false, description, imagePath: imagePath);
 
     // Navigator.pop(context, todo);
-
   }
 
   placesAutoCompleteTextField() {
@@ -107,7 +158,7 @@ class _AddShoppingBasketState extends State<AddShoppingBasket>{
       padding: const EdgeInsets.symmetric(horizontal: 0),
       child: GooglePlaceAutoCompleteTextField(
         textEditingController: textPlaceFieldController,
-        googleAPIKey:apiKey,
+        googleAPIKey: apiKey,
         inputDecoration: const InputDecoration(
           hintText: "Search your location",
           border: InputBorder.none,
@@ -142,7 +193,7 @@ class _AddShoppingBasketState extends State<AddShoppingBasket>{
                 const SizedBox(
                   width: 7,
                 ),
-                Expanded(child: Text("${prediction.description??""}"))
+                Expanded(child: Text("${prediction.description ?? ""}"))
               ],
             ),
           );

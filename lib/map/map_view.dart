@@ -22,7 +22,7 @@ class _MapViewState extends State<MapView> {
   LatLng? _currentPosition;
   List<LatLng> endLocations = [];
   String? _url;
-  final String apiKey = "";
+  final String apiKey = "AIzaSyASUEvfB48BeoYiKNS4BISIa52VRiRzBVc";
   late Future<void> _locationFuture;
   BitmapDescriptor? customIcon;
 
