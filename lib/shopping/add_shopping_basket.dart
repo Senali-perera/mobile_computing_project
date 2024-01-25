@@ -32,11 +32,13 @@ class _AddShoppingBasketState extends State<AddShoppingBasket> {
   late AudioPlayer audioPlayer;
   bool isRecording = false;
   bool playing = false;
+  late List<String> basketItems;
 
   @override
   void initState() {
     super.initState();
     audioPlayer = AudioPlayer();
+    basketItems = [];
   }
 
   @override
@@ -101,13 +103,46 @@ class _AddShoppingBasketState extends State<AddShoppingBasket> {
     ),
   );
 
+  void deleteShoppingItem(String item) {
+    setState(() {
+      basketItems.remove(item);
+    });
+  }
+
+  void addItems(String item){
+    setState(() {
+      basketItems.add(item);
+      _textDescriptionFieldController.clear();
+    });
+  }
+
+  Widget _viewShoppingBasket(String shoppingItem) {
+    return ListTile(
+      title: Text(shoppingItem),
+      trailing: IconButton(
+        icon: const Icon(Icons.delete),
+        onPressed: () {
+          deleteShoppingItem(shoppingItem);
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Add Shopping Basket'),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () {
+              _addShoppingBasket(context);
+            },
+            child: const Text("Add"),
+          )
+        ],
       ),
-      body: Container(
+      body: SingleChildScrollView(
         child: Padding(
           padding: EdgeInsets.all(16.0),
           child: Column(
@@ -117,12 +152,7 @@ class _AddShoppingBasketState extends State<AddShoppingBasket> {
                 decoration:
                     const InputDecoration(hintText: 'Shopping basket title'),
               ),
-              TextField(
-                controller: _textDescriptionFieldController,
-                decoration: const InputDecoration(
-                    hintText: 'Enter todo description here'),
-              ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               placesAutoCompleteTextField(),
               lng != null
                   ? TextButton(
@@ -168,18 +198,33 @@ class _AddShoppingBasketState extends State<AddShoppingBasket> {
                       height: 100.0,
                       child: _image != null ? Image.file(_image!) : null)
                   : const Column(),
-              const Expanded(
-                child: SizedBox(),
+              Row(
+                children: <Widget>[
+                  Expanded(
+                    // Expanded widget makes the TextField take up all remaining space
+                    child: TextField(
+                      controller: _textDescriptionFieldController,
+                      decoration: const InputDecoration(
+                        hintText: 'Enter items',
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 8), // Optional: provides some spacing between the text field and the button
+                  IconButton(
+                    onPressed: () {
+                      addItems(_textDescriptionFieldController.text);
+                    },
+                    icon: Icon(Icons.add),
+                  ),
+                ],
               ),
-              Align(
-                alignment: Alignment.bottomCenter,
-                child: ElevatedButton(
-                  style: raisedButtonStyle,
-                  onPressed: () {
-                    _addShoppingBasket(context);
-                  },
-                  child: const Text('Add'),
-                ),
+              ListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: basketItems.length,
+                itemBuilder: (context, index) {
+                  return _viewShoppingBasket(basketItems[index]);
+                },
               ),
             ],
           ),
