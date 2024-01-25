@@ -22,7 +22,11 @@ class MyApp extends StatelessWidget {
 
     requestPermission();
 
-    return const MaterialApp(
+    return MaterialApp(
+      theme: ThemeData(
+        colorSchemeSeed: const Color(0xff6750a4),
+        useMaterial3: true,
+      ),
       title: title,
       home: ViewShoppingList(),
     );

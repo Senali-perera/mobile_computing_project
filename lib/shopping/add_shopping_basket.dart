@@ -4,6 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:google_places_flutter/google_places_flutter.dart';
 import 'package:google_places_flutter/model/prediction.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:record/record.dart';
+import 'package:audioplayers/audioplayers.dart';
 
 import '../map/map_view.dart';
 
@@ -21,16 +24,69 @@ class _AddShoppingBasketState extends State<AddShoppingBasket> {
   TextEditingController textPlaceFieldController = TextEditingController();
   double? lng;
   double? lat;
-
   File? _image;
   final imagePicker = ImagePicker();
+  bool showPlayer = false;
+  String? audioPath;
+  late AudioRecorder audioRecord;
+  late AudioPlayer audioPlayer;
+  bool isRecording = false;
+  bool playing = false;
 
-  void getImageFromGallery() async {
+  @override
+  void initState() {
+    super.initState();
+    audioPlayer = AudioPlayer();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    audioPlayer.dispose();
+  }
+
+  void capturePhoto() async {
     final pickedFile = await imagePicker.pickImage(source: ImageSource.camera);
 
     setState(() {
       if (pickedFile != null) {
         _image = File(pickedFile.path);
+      }
+    });
+  }
+
+  Future<void> startRecording() async {
+    audioRecord = AudioRecorder();
+
+    if (await audioRecord.hasPermission()) {
+      final directory = await getApplicationDocumentsDirectory();
+      final filePath = '${directory.path}/recording.m4a';
+
+      await audioRecord.start(const RecordConfig(), path: filePath);
+      setState(() {
+        isRecording = true;
+      });
+    }
+  }
+
+  Future<void> stopRecording() async {
+    String? path = await audioRecord.stop();
+    audioRecord.dispose();
+    setState(() {
+      // recoding_now=false;
+      isRecording = false;
+      audioPath = path!;
+    });
+  }
+
+  Future<void> playRecording() async {
+    playing = true;
+    Source urlSource = UrlSource(audioPath!);
+    await audioPlayer.play(urlSource);
+    audioPlayer.onPlayerStateChanged.listen((PlayerState state) {
+      if (state == PlayerState.completed) {
+        playing = false;
+        // setState(() {});
       }
     });
   }
@@ -76,30 +132,42 @@ class _AddShoppingBasketState extends State<AddShoppingBasket> {
                       child: const Text('Go to the map'),
                     )
                   : const Column(),
-              SizedBox(height: 20),
-              OutlinedButton(
-                onPressed: () {
-                  getImageFromGallery();
-                },
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: Colors.blue,
-                  side: const BorderSide(color: Colors.blue, width: 2),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                ),
-                child: const Text(
-                  "Add Picture",
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.blue,
+              const SizedBox(height: 20),
+              Stack(
+                children: [
+                  Row(
+                    children: [
+                      ElevatedButton(
+                          onPressed: () {
+                            capturePhoto();
+                          },
+                          child: const Text("Capture Photo")),
+                      const SizedBox(
+                        width: 10.0,
+                      ),
+                      ElevatedButton(
+                        onPressed: () {
+                          isRecording ? stopRecording() : startRecording();
+                        },
+                        child:
+                            Text(isRecording ? "Stop Audio" : "Start Record"),
+                      ),
+                      const SizedBox(
+                        width: 10.0,
+                      ),
+                      IconButton.filled(
+                          onPressed: audioPath == null ? null : playRecording,
+                          icon: const Icon(Icons.play_arrow)),
+                    ],
                   ),
-                ),
+                ],
               ),
-              SizedBox(
-                  width: 100.0,
-                  height: 100.0,
-                  child: _image != null ? Image.file(_image!) : const Column()),
+              _image != null
+                  ? SizedBox(
+                      width: 100.0,
+                      height: 100.0,
+                      child: _image != null ? Image.file(_image!) : null)
+                  : const Column(),
               const Expanded(
                 child: SizedBox(),
               ),
@@ -110,7 +178,7 @@ class _AddShoppingBasketState extends State<AddShoppingBasket> {
                   onPressed: () {
                     _addShoppingBasket(context);
                   },
-                  child: Text('Add'),
+                  child: const Text('Add'),
                 ),
               ),
             ],
