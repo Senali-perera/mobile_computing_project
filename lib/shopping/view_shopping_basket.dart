@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:google_places_flutter/google_places_flutter.dart';
 import 'package:google_places_flutter/model/prediction.dart';
@@ -8,30 +9,33 @@ import 'package:mobile_computing_project/shopping/shopping_basket.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
-import 'package:audioplayers/audioplayers.dart';
 
 import '../map/map_view.dart';
 
-class AddShoppingBasket extends StatefulWidget {
+class ViewShoppingBasket extends StatefulWidget {
+  late ShoppingBasket shoppingBasket;
+
+  ViewShoppingBasket({super.key, required this.shoppingBasket});
+
   @override
-  _AddShoppingBasketState createState() => _AddShoppingBasketState();
+  _ViewShoppingBasketState createState() => _ViewShoppingBasketState();
 }
 
-class _AddShoppingBasketState extends State<AddShoppingBasket> {
+class _ViewShoppingBasketState extends State<ViewShoppingBasket> {
   String apiKey = "";
   final TextEditingController _textTitleFieldController =
-      TextEditingController();
-  final TextEditingController _textItemFieldController =
   TextEditingController();
   TextEditingController textPlaceFieldController = TextEditingController();
+  final TextEditingController _textItemFieldController =
+  TextEditingController();
   double? lng;
   double? lat;
-  File? _image;
   final imagePicker = ImagePicker();
-  bool showPlayer = false;
-  String? audioPath;
+  File? _image;
   late AudioRecorder audioRecord;
   late AudioPlayer audioPlayer;
+  bool showPlayer = false;
+  String? audioPath;
   bool isRecording = false;
   bool playing = false;
   late List<String> basketItems;
@@ -39,14 +43,31 @@ class _AddShoppingBasketState extends State<AddShoppingBasket> {
   @override
   void initState() {
     super.initState();
+    _textTitleFieldController.text = widget.shoppingBasket.title;
+    textPlaceFieldController.text = widget.shoppingBasket.locationDescription!;
+    lng = double.parse(widget.shoppingBasket.lng.toString());
+    lat = double.parse(widget.shoppingBasket.lat.toString());
+    _image = File(widget.shoppingBasket.imagePath.toString());
     audioPlayer = AudioPlayer();
-    basketItems = [];
+    audioPath = widget.shoppingBasket.voiceRecordPath.toString();
+    basketItems = widget.shoppingBasket.items;
   }
 
   @override
   void dispose() {
     super.dispose();
     audioPlayer.dispose();
+  }
+
+  void goToMap(BuildContext context) async {
+    final result = await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => MapView(
+              lat: lat ?? 0.0,
+              lng: lng ?? 0.0,
+              description: textPlaceFieldController.text),
+        ));
   }
 
   void capturePhoto() async {
@@ -90,21 +111,9 @@ class _AddShoppingBasketState extends State<AddShoppingBasket> {
     audioPlayer.onPlayerStateChanged.listen((PlayerState state) {
       if (state == PlayerState.completed) {
         playing = false;
-        // setState(() {});
       }
     });
   }
-
-  // final ButtonStyle raisedButtonStyle = ElevatedButton.styleFrom(
-  //   foregroundColor: Colors.black87,
-  //   backgroundColor: Colors.purple[300],
-  //   minimumSize: Size(400, 36),
-  //   padding: EdgeInsets.symmetric(horizontal: 16),
-  //   shape: const RoundedRectangleBorder(
-  //     borderRadius: BorderRadius.all(Radius.circular(20)),
-  //   ),
-  // );
-
   void deleteShoppingItem(String item) {
     setState(() {
       basketItems.remove(item);
@@ -130,17 +139,6 @@ class _AddShoppingBasketState extends State<AddShoppingBasket> {
     );
   }
 
-  void goToMap(BuildContext context) async {
-    final result = await Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => MapView(
-              lat: lat ?? 0.0,
-              lng: lng ?? 0.0,
-              description: textPlaceFieldController.text),
-        ));
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -149,9 +147,9 @@ class _AddShoppingBasketState extends State<AddShoppingBasket> {
         actions: <Widget>[
           TextButton(
             onPressed: () {
-              _addShoppingBasket(context);
+              _updateShoppingBasket(context);
             },
-            child: const Text("Add"),
+            child: const Text("Update"),
           )
         ],
       ),
@@ -166,18 +164,18 @@ class _AddShoppingBasketState extends State<AddShoppingBasket> {
                     const InputDecoration(hintText: 'Shopping basket title'),
               ),
               const SizedBox(height: 20),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: <Widget>[
-                Expanded(
-                  child: placesAutoCompleteTextField(),
-                ),
-                IconButton.filled(
-                  icon: Icon(Icons.map), // Example icon
-                  onPressed: lng == null ? null : () => goToMap(context),
-                )
-              ],
-            ),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: <Widget>[
+                  Expanded(
+                    child: placesAutoCompleteTextField(),
+                  ),
+                  IconButton.filled(
+                    icon: Icon(Icons.map), // Example icon
+                    onPressed: lng == null ? null : () => goToMap(context),
+                  )
+                ],
+              ),
               const SizedBox(height: 20),
               Stack(
                 children: [
@@ -187,7 +185,7 @@ class _AddShoppingBasketState extends State<AddShoppingBasket> {
                           onPressed: () {
                             capturePhoto();
                           },
-                          child: const Text("Capture Photo")),
+                          child: Text(_image == null ? "Capture Photo" : "Edit Photo")),
                       const SizedBox(
                         width: 10.0,
                       ),
@@ -196,7 +194,7 @@ class _AddShoppingBasketState extends State<AddShoppingBasket> {
                           isRecording ? stopRecording() : startRecording();
                         },
                         child:
-                            Text(isRecording ? "Stop Audio" : "Start Record"),
+                        Text(isRecording ? "Stop Audio" : "Start Record"),
                       ),
                       const SizedBox(
                         width: 10.0,
@@ -210,9 +208,9 @@ class _AddShoppingBasketState extends State<AddShoppingBasket> {
               ),
               _image != null
                   ? SizedBox(
-                      width: 100.0,
-                      height: 100.0,
-                      child: _image != null ? Image.file(_image!) : null)
+                  width: 100.0,
+                  height: 100.0,
+                  child: _image != null ? Image.file(_image!) : null)
                   : const Column(),
               Row(
                 children: <Widget>[
@@ -246,29 +244,6 @@ class _AddShoppingBasketState extends State<AddShoppingBasket> {
         ),
       ),
     );
-  }
-
-  Future<String> saveImageToFileSystem(File imageFile) async {
-    final directory = await getApplicationDocumentsDirectory();
-    final fileName = basename(imageFile.path);
-    final savedImage = await imageFile.copy('${directory.path}/$fileName');
-    return savedImage.path;
-  }
-
-  Future<void> _addShoppingBasket(BuildContext context) async {
-    String title = _textTitleFieldController.text;
-    String locationDescription = textPlaceFieldController.text;
-    String? imagePath;
-    String id = DateTime.now().toIso8601String();
-    DateTime dateTime = DateTime.now();
-
-    if(_image != null){
-      imagePath = await saveImageToFileSystem(_image!);
-    }
-
-    ShoppingBasket shoppingBasket = ShoppingBasket(id, title, false, basketItems, dateTime:dateTime, imagePath: imagePath, voiceRecordPath: audioPath, lat: lat.toString(), lng: lng.toString(), locationDescription: locationDescription);
-
-    Navigator.pop(context, shoppingBasket);
   }
 
   placesAutoCompleteTextField() {
@@ -318,5 +293,28 @@ class _AddShoppingBasketState extends State<AddShoppingBasket> {
         isCrossBtnShown: true,
       ),
     );
+  }
+
+  Future<String> saveImageToFileSystem(File imageFile) async {
+    final directory = await getApplicationDocumentsDirectory();
+    final fileName = basename(imageFile.path);
+    final savedImage = await imageFile.copy('${directory.path}/$fileName');
+    return savedImage.path;
+  }
+
+  Future<void> _updateShoppingBasket(BuildContext context) async {
+    String title = _textTitleFieldController.text;
+    String locationDescription = textPlaceFieldController.text;
+    String? imagePath;
+    String id = DateTime.now().toIso8601String();
+    DateTime dateTime = DateTime.now();
+
+    if(_image != null){
+      imagePath = await saveImageToFileSystem(_image!);
+    }
+
+    ShoppingBasket shoppingBasket = ShoppingBasket(id, title, false, basketItems, dateTime:dateTime, imagePath: imagePath, voiceRecordPath: audioPath, lat: lat.toString(), lng: lng.toString(), locationDescription: locationDescription);
+
+    Navigator.pop(context, shoppingBasket);
   }
 }

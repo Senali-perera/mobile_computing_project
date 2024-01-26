@@ -8,8 +8,11 @@ class ShoppingBasket{
   DateTime? dateTime;
   String? imagePath;
   String? voiceRecordPath;
+  String? lng;
+  String? lat;
+  String? locationDescription;
 
-  ShoppingBasket(this.id, this.title, this.isDone, this.items, {this.dateTime, this.imagePath, this.voiceRecordPath});
+  ShoppingBasket(this.id, this.title, this.isDone, this.items, {this.dateTime, this.imagePath, this.voiceRecordPath, this.lat, this.lng, this.locationDescription});
 
   Map<String, dynamic> toMap(){
     return{
@@ -19,7 +22,10 @@ class ShoppingBasket{
       'items': jsonEncode(items),
       'dateTime': dateTime?.toIso8601String(),
       'imagePath': imagePath,
-      'voiceRecordPath': voiceRecordPath
+      'voiceRecordPath': voiceRecordPath,
+      'lng': lng,
+      'lat': lat,
+      'locationDescription': locationDescription,
     };
   }
 
@@ -32,6 +38,9 @@ class ShoppingBasket{
       dateTime: DateTime.parse(map['dateTime']),
       imagePath: map['imagePath'],
       voiceRecordPath: map['voiceRecordPath'],
+      lng: map['lng'],
+      lat: map['lat'],
+      locationDescription: map['locationDescription'],
     );
   }
 }

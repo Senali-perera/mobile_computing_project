@@ -13,7 +13,8 @@ class MyApp extends StatelessWidget {
   Future<void> requestPermission() async {
     LocationPermission permission;
     permission = await Geolocator.requestPermission();
-    Permission.camera.request();
+    await Permission.camera.request();
+    await Permission.microphone.request();
   }
 
   @override

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:mobile_computing_project/services/database/shopping_basket_db.dart';
 import 'package:mobile_computing_project/shopping/add_shopping_basket.dart';
 import 'package:mobile_computing_project/shopping/shopping_basket.dart';
+import 'package:mobile_computing_project/shopping/view_shopping_basket.dart';
 
 class ViewShoppingList extends StatefulWidget {
   const ViewShoppingList({super.key});
@@ -33,6 +34,17 @@ class _ShoppingListState extends State<ViewShoppingList>{
     loadShoppingBaskets();
   }
 
+  void _editShoppingBasket(BuildContext context, ShoppingBasket shoppingBasket) async{
+    final result = await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ViewShoppingBasket(shoppingBasket: shoppingBasket),
+        ));
+
+    shoppingBasketDB.updateShoppingBasket(shoppingBasket.id, result);
+    loadShoppingBaskets();
+  }
+
   @override
   void initState() {
     super.initState();
@@ -42,13 +54,15 @@ class _ShoppingListState extends State<ViewShoppingList>{
   Widget _viewShoppingBasket(ShoppingBasket shoppingBasket){
     return ListTile(
       title: Text(shoppingBasket.title),
+      onTap: (){_editShoppingBasket(context, shoppingBasket);},
       trailing: IconButton(
         icon: const Icon(Icons.delete),
         onPressed: () {
-          // todoDB.deleteTodo(todo.id);
-          // loadTodos();
+          shoppingBasketDB.deleteShoppingBasket(shoppingBasket.id);
+          loadShoppingBaskets();
         },
       ),
+      subtitle: Text(shoppingBasket.dateTime!.toString()),
       leading: IconButton(
         icon: Icon(
           shoppingBasket.isDone ? Icons.check_box : Icons.check_box_outline_blank,
