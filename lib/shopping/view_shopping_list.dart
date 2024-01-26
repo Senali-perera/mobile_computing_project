@@ -68,8 +68,8 @@ class _ShoppingListState extends State<ViewShoppingList>{
           shoppingBasket.isDone ? Icons.check_box : Icons.check_box_outline_blank,
         ),
         onPressed: () {
-          // todoDB.deleteTodo(todo.id);
-          // loadTodos();
+          shoppingBasketDB.deleteShoppingBasket(shoppingBasket.id);
+          loadShoppingBaskets();
         },
       ),
     );
