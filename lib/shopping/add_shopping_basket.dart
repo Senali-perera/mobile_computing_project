@@ -16,7 +16,7 @@ class AddShoppingBasket extends StatefulWidget {
 }
 
 class _AddShoppingBasketState extends State<AddShoppingBasket> {
-  String apiKey = "AIzaSyASUEvfB48BeoYiKNS4BISIa52VRiRzBVc";
+  String apiKey = "";
   final TextEditingController _textTitleFieldController =
       TextEditingController();
   final TextEditingController _textDescriptionFieldController =
@@ -128,6 +128,17 @@ class _AddShoppingBasketState extends State<AddShoppingBasket> {
     );
   }
 
+  void goToMap(BuildContext context) async {
+    final result = await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => MapView(
+              lat: lat ?? 0.0,
+              lng: lng ?? 0.0,
+              description: _textDescriptionFieldController.text),
+        ));
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -153,15 +164,18 @@ class _AddShoppingBasketState extends State<AddShoppingBasket> {
                     const InputDecoration(hintText: 'Shopping basket title'),
               ),
               const SizedBox(height: 20),
-              placesAutoCompleteTextField(),
-              lng != null
-                  ? TextButton(
-                      onPressed: () {
-                        _goToMap(context);
-                      },
-                      child: const Text('Go to the map'),
-                    )
-                  : const Column(),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: <Widget>[
+                Expanded(
+                  child: placesAutoCompleteTextField(),
+                ),
+                IconButton.filled(
+                  icon: Icon(Icons.map), // Example icon
+                  onPressed: lng == null ? null : () => goToMap(context),
+                )
+              ],
+            ),
               const SizedBox(height: 20),
               Stack(
                 children: [
@@ -201,7 +215,6 @@ class _AddShoppingBasketState extends State<AddShoppingBasket> {
               Row(
                 children: <Widget>[
                   Expanded(
-                    // Expanded widget makes the TextField take up all remaining space
                     child: TextField(
                       controller: _textDescriptionFieldController,
                       decoration: const InputDecoration(
@@ -209,7 +222,7 @@ class _AddShoppingBasketState extends State<AddShoppingBasket> {
                       ),
                     ),
                   ),
-                  SizedBox(width: 8), // Optional: provides some spacing between the text field and the button
+                  SizedBox(width: 8),
                   IconButton(
                     onPressed: () {
                       addItems(_textDescriptionFieldController.text);
@@ -231,17 +244,6 @@ class _AddShoppingBasketState extends State<AddShoppingBasket> {
         ),
       ),
     );
-  }
-
-  void _goToMap(BuildContext context) async {
-    final result = await Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => MapView(
-              lat: lat ?? 0.0,
-              lng: lng ?? 0.0,
-              description: _textDescriptionFieldController.text),
-        ));
   }
 
   // Future<String> saveImageToFileSystem(File imageFile) async {
@@ -296,13 +298,12 @@ class _AddShoppingBasketState extends State<AddShoppingBasket> {
         seperatedBuilder: const Divider(),
         containerHorizontalPadding: 10,
 
-        // OPTIONAL// If you want to customize list view item builder
         itemBuilder: (context, index, Prediction prediction) {
           return Container(
             padding: EdgeInsets.all(10),
             child: Row(
               children: [
-                Icon(Icons.location_on),
+                const Icon(Icons.location_on),
                 const SizedBox(
                   width: 7,
                 ),
